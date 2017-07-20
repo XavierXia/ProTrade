@@ -12,3 +12,9 @@
 
 ## 项目框架图
 ![image](https://github.com/XavierXia/ProTrade/raw/master/images/ProTrade.png)
+
+## 项目计划
+本项目会逐步量化市面上流行的炒股方法,如:
+* 缠论
+* 涨停板战法
+......
