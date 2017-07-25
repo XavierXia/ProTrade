@@ -1,0 +1,56 @@
+本文档主要说明搭建ProTrade量化系统所要做的前期工作.
+本说明分为以下几部分:
+1. nginx安装及使用
+
+##########################################################
+#######################1.nginx############################
+##########################################################
+# Mac安装nignx
+brew search nginx
+brew install nginx
+
+#或者还有其他的方法安装Nginx
+#install pcre
+tar -zxvf pcre-8.41.tar.gz
+cd pcre-8.5
+sudo ./configure --prefix=/usr/local
+sudo make
+sudo make install
+
+#install openSSL
+tar -zxvf tar -zxvf openssl-1.0.2l.tar.gz
+cd openssl-1.0.2l
+sudo ./config --prefix=/usr/local
+sudo make
+sudo make install
+
+#install nginx
+wget http://nginx.org/download/nginx-1.12.1.tar.gz
+tar -zxvf nginx-1.12.1.tar.gz
+cd nginx
+sudo ./configure --prefix=/usr/local/nginx --with-http_ssl_module --with-cc-opt="-Wno-deprecated-declarations" --with-openssl=/usr/l
+ocal/openssl-1.0.2l
+sudo ln -s /usr/local/nginx/sbin/nginx /usr/sbin/nginx
+
+######安装nginx之后的说明#####
+#安装完以后，可以在终端输出的信息里看到一些配置路径：
+/usr/local/etc/nginx/nginx.conf （配置文件路径）
+/usr/local/var/www （服务器默认路径）
+/usr/local/Cellar/nginx/ （安装路径）
+访问localhost:8080，成功说明安装好了
+
+######nginx备注########
+ln -s  /usr/local/sbin/nginx /usr/bin/nginx 做个软连接
+#常用的指令有： 
+nginx -V 查看版本，以及配置文件地址
+nginx -v 查看版本
+nginx -c filename 指定配置文件
+nginx -h 帮助
+
+######nginx简单命令#########
+#重新加载配置|重启|停止|退出 nginx
+nginx -s reload|reopen|stop|quit
+#打开 nginx
+sudo nginx 或者 nginx
+#测试配置是否有语法错误
+nginx -t 测试nginx.conf配置
