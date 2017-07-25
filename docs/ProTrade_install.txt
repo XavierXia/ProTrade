@@ -1,0 +1,88 @@
+本文档主要说明搭建ProTrade量化系统所要做的前期工作.
+本说明分为以下几部分:
+1. nginx安装及使用
+2. Tornado安装及使用
+3. supervior使用
+
+##########################################################
+#######################1.nginx############################
+##########################################################
+# Mac安装nignx
+brew search nginx
+brew install nginx
+
+#或者还有其他的方法安装Nginx
+#下载 nginx,pcre,zlib库
+1. ./configure --sbin-path=/usr/local/nginx/nginx --conf-path=/usr/local/nginx/nginx.conf --pid-path=/usr/local/nginx/nginx.pid --with-http_ssl_module --with-pcre=../pcre-8.38 --with-zlib=../zlib-1.2.8 --with-openssl=../openssl-1.0.2g
+2. make -j8 && sudo make install
+3. sudo ln -s /usr/local/nginx/sbin/nginx /usr/sbin/nginx
+
+######安装nginx之后的说明#####
+#安装完以后，可以在终端输出的信息里看到一些配置路径：
+/usr/local/etc/nginx/nginx.conf （配置文件路径）
+/usr/local/var/www （服务器默认路径）
+/usr/local/Cellar/nginx/ （安装路径）
+访问localhost:8080，成功说明安装好了
+
+######nginx备注########
+ln -s  /usr/local/sbin/nginx /usr/bin/nginx 做个软连接
+#常用的指令有： 
+nginx -V 查看版本，以及配置文件地址
+nginx -v 查看版本
+nginx -c filename 指定配置文件
+nginx -h 帮助
+
+######nginx简单命令#########
+#重新加载配置|重启|停止|退出 nginx
+nginx -s reload|reopen|stop|quit
+#打开 nginx
+nginx
+#使用指定的配置文件启动nginx
+nginx -c <conf_file>
+#测试配置是否有语法错误
+nginx -t 测试nginx.conf配置
+#例如
+sudo nginx -s quit -c /Users/hebo/Desktop/XavierXia/pro_code/python/ProTrade/
+cfg/nginx.conf
+
+##########################################################
+#######################2.Tornado############################
+##########################################################
+#安装
+pip install tornado
+
+##########################################################
+#######################3.supervior############################
+##########################################################
+#用supervisor来管理服务和进程
+#安装
+pip install supervior
+
+#在 Mac环境中对supervior进行如下设置
+#1. 转换成root权限
+echo_supervisord_conf > /etc/supervisord.conf
+#2. 修复/etc/supervisord.conf
+[include]
+files = /etc/supervisord.d/*.ini
+#3. 创建目录
+mkdir -p /etc/supervisord.d
+#4. 将进程管理的脚本放到supervisord.d
+#5. supervisord 启动
+sudo /Users/hebo/anaconda2/bin/supervisord -c /etc/supervisord.conf 
+#6. 查看进程及相关操作
+sudo supervisorctl
+#进程关闭
+supervisor> stop tornadoes:tornado-8000
+#或者
+sudo supervisorctl start all
+
+#进程开启
+supervisor> start tornadoes:tornado-8000
+#或者
+sudo supervisorctl start all
+
+##########################################################
+#######################MySQLdb############################
+##########################################################
+#安装
+pip install MySQL-python
