@@ -3,6 +3,7 @@
 1. nginx安装及使用
 2. Tornado安装及使用
 3. supervior使用
+4. MongoDB安装及使用
 
 ##########################################################
 #######################1.nginx############################
@@ -42,8 +43,7 @@ nginx -c <conf_file>
 #测试配置是否有语法错误
 nginx -t 测试nginx.conf配置
 #例如
-sudo nginx -s quit -c /Users/hebo/Desktop/XavierXia/pro_code/python/ProTrade/
-cfg/nginx.conf
+sudo nginx -s quit -c /Users/hebo/Desktop/XavierXia/pro_code/python/ProTrade/cfg/nginx.conf
 
 ##########################################################
 #######################2.Tornado############################
@@ -74,7 +74,7 @@ sudo supervisorctl
 #进程关闭
 supervisor> stop tornadoes:tornado-8000
 #或者
-sudo supervisorctl start all
+sudo supervisorctl start stop
 
 #进程开启
 supervisor> start tornadoes:tornado-8000
@@ -82,7 +82,33 @@ supervisor> start tornadoes:tornado-8000
 sudo supervisorctl start all
 
 ##########################################################
-#######################MySQLdb############################
+#######################MongoDB############################
 ##########################################################
-#安装
-pip install MySQL-python
+#mongoDB
+#下载PyMongodb
+curl -O https://fastdl.mongodb.org/osx/mongodb-osx-x86_64-3.4.6.
+tgz
+#解压
+tar -zxvf mongodb-osx-x86_64-3.4.6.tgz
+#
+mkdir -p mongodb
+cp -R -n mongodb-osx-x86_64-3.4.6/ mongodb
+#增加环境变量
+open .bash_profile
+export PATH=<mongodb-install-directory>/bin:$PATH
+#数据存放路径
+mkdir -p /data/db #默认
+mongodb/bin/mongod --dbpath /Users/hebo/data/db/
+
+#问题1: pymongo版本不兼容,会出现问题
+>>> import pymongo
+>>> conn = pymongo.Connection("localhost", 27017)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+AttributeError: 'module' object has no attribute 'Connection'
+#解决方法
+pip install pymongo==2.7.2
+#问题2: 终端下命令失效
+在.bash_profile中添加 export PATH=/bin:/usr/bin:/sbin:/usr/sbin 
+source .bash_profile
+
