@@ -11,7 +11,7 @@ db "finance"
 -----------"word",like "600000","600001",...
 -----------------"m","w","d","30F",...
 '''
-
+# -*- coding:utf-8 -*-
 import tornado.web
 import tornado.ioloop
 import tornado.httpserver
@@ -25,19 +25,22 @@ usage:
 --GET
 curl http://localhost:80/fetchData/600000
 curl http://localhost:80/fetchData/all
+
+TODO:
+该处的接口和 处理过程均需优化,现阶段只是为了获取数据的权宜之计.
 '''
 class FetchDataHandler(tornado.web.RequestHandler):
 	def get(self, word):
 		print "FetchDataHandler: word ", word
 		stockColl = self.application.db.stock
-		stock_doc = stockColl[str(word)]
-		if stock_doc:
-			#del stock_doc["_id"]
-			self.write(stock_doc)
-			print stock_doc
-		else:
-			self.set_status(404)
-			self.write({"error": "word not found"})
+		for stock in stockColl.find():
+			if stock:
+				del stock['_id']
+				self.write(stock)
+			else:
+				self.set_status(404)
+				self.write({"error": "word not found"})
+
 
 '''
 usage:
