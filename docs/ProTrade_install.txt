@@ -5,6 +5,11 @@
 3. supervior使用
 4. MongoDB安装及使用
 
+ProTrade系统启动项:
+1. nginx
+2. supervior
+3. MongoDB
+
 ##########################################################
 #######################1.nginx############################
 ##########################################################
@@ -39,17 +44,21 @@ nginx -s reload|reopen|stop|quit
 #打开 nginx
 nginx
 #使用指定的配置文件启动nginx
-nginx -c <conf_file>
+sudo nginx -c /Users/hebo/Desktop/XavierXia/pro_code/python/ProTrade/conf/nginx.conf
 #测试配置是否有语法错误
 nginx -t 测试nginx.conf配置
 #例如
-sudo nginx -s quit -c /Users/hebo/Desktop/XavierXia/pro_code/python/ProTrade/cfg/nginx.conf
+sudo nginx -s quit -c /Users/hebo/Desktop/XavierXia/pro_code/python/ProTrade/conf/nginx.conf
 
 ##########################################################
 #######################2.Tornado############################
 ##########################################################
 #安装
 pip install tornado
+
+#问题1:
+ImportError: No module named tornado.httpserver
+解决:重新安装python2.7导致了需要重新安装tornado
 
 ##########################################################
 #######################3.supervior############################
@@ -74,15 +83,23 @@ sudo supervisorctl
 #进程关闭
 supervisor> stop tornadoes:tornado-8000
 #或者
-sudo supervisorctl start stop
+sudo supervisorctl stop all
 
 #进程开启
 supervisor> start tornadoes:tornado-8000
 #或者
 sudo supervisorctl start all
 
+supervisorctl status
+supervisorctl update
+
+# 查看程序状态
+supervisor> status
+# 查看该程序的日志
+supervisor> tail -f tornadoes:tornado-8000
+
 ##########################################################
-#######################MongoDB############################
+#######################4.MongoDB############################
 ##########################################################
 #mongoDB
 #下载PyMongodb
@@ -99,6 +116,8 @@ export PATH=<mongodb-install-directory>/bin:$PATH
 #数据存放路径
 mkdir -p /data/db #默认
 mongodb/bin/mongod --dbpath /Users/hebo/data/db/
+#进入 mongoDB shell终端,需要开启 mongodb之后再执行该语句
+mongodb/bin/mongo
 
 #问题1: pymongo版本不兼容,会出现问题
 >>> import pymongo
@@ -112,3 +131,32 @@ pip install pymongo==2.7.2
 在.bash_profile中添加 export PATH=/bin:/usr/bin:/sbin:/usr/sbin 
 source .bash_profile
 
+##########################################################
+#######################5.Anaconda############################
+##########################################################
+#到官网下载anaconda2和3
+#1.先安装 anaconda2到目录,如/Users/hebo/anaconda2/
+#2.之后安装anaconda3到目录,如/Users/hebo/anaconda2/envs下面
+
+#在/Users/hebo/anaconda2/envs/生成test_py3和test_py2
+#3.基于 python3.6 创建一个名为test_py3 的环境
+conda create --name test_py3 python=3.6 
+#4.基于 python2.7 创建一个名为test_py2 的环境
+conda create --name test_py2 python=2.7
+
+# 激活 test 环境
+source activate test_py2 # linux/mac
+
+# 切换到python3
+source activate  test_py3
+#列出当前使用的环境
+conda info --envs
+
+#5.默认显示anaconda2的python版本
+# 将anaconda的bin目录加入PATH，根据版本不同，也可能是~/anaconda3/bin
+echo 'export PATH="~/anaconda2/bin:$PATH"' >> ~/.bashrc
+# 更新bashrc以立即生效
+source ~/.bashrc
+
+#安装包
+conda install pymongo

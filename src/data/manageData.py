@@ -1,17 +1,11 @@
 #!/usr/bin/env python
+# -*- coding:utf-8 -*-
 #
 #
 # Copyright 2017 XavierXia(xiawenxing2010@163.com).
 #
 # Licensed under GNU General Public License, Version 3.0 (the "License");
-'''
-MongoDB stucture:
-db "finance"
------"stock"
------------"word",like "600000","600001",...
------------------"m","w","d","30F",...
-'''
-# -*- coding:utf-8 -*-
+
 import tornado.web
 import tornado.ioloop
 import tornado.httpserver
@@ -25,9 +19,6 @@ usage:
 --GET
 curl http://localhost:80/fetchData/600000
 curl http://localhost:80/fetchData/all
-
-TODO:
-该处的接口和 处理过程均需优化,现阶段只是为了获取数据的权宜之计.
 '''
 class FetchDataHandler(tornado.web.RequestHandler):
 	def get(self, word):
@@ -51,8 +42,8 @@ http://localhost:80/saveData -d word=all
 class SaveDataHandler(tornado.web.RequestHandler):
 	def post(self):
 		stockColl = self.application.db.stock
-		word = self.get_argument('word','')
-		if word == '':
+		word = self.get_argument('word','default')
+		if word == 'default':
 			self.write('Please again input!')
 
 		dD = ts.get_k_data(str(word))
@@ -68,4 +59,34 @@ class SaveDataHandler(tornado.web.RequestHandler):
 		del astock['_id']
 		self.write(astock)
 
+'''
+http://localhost/md?ac=save&tp=stock&cd=600000
 
+'''
+class ManageDataHandler(tornado.web.RequestHandler):
+	def get(self,word):
+		args = self.request.arguments
+		arg1 = self.get_arguments("tp")
+		data = self.request.query_arguments
+		#TODO error
+		logger = self.application.logger
+		#arg2 = self.get_query_arguments()
+		#code = args[2]
+		logger.info("arg1....%s",args)
+		logger.info("arg2....%s",arg1)
+		logger.info("data....%s",data)
+		self.write({"hao":"111"})
+		'''
+		dD = ts.get_k_data(str(code))
+		dD = json.loads(dD.to_json(orient='records'))
+
+		stockColl = self.application.db.stock
+		sDoc = stockColl.findOne({"dCode":code})
+		if sDoc:
+			stockColl.update({"dCode":code},{"$push":code})
+		else:
+			stockColl.insert({"dCode":code})
+			stockColl.update({"dCode":code},{"$push":{"dData":dD}})
+		del stockColl["_id"]
+		self.write(stockColl)
+		'''

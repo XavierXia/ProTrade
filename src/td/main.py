@@ -9,10 +9,11 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.options
 import tornado.web
-import pymongo
+from pymongo import MongoClient
 
 from tornado.options import define, options
 
+import logging
 import sys
 sys.path.append('../')
 from data.manageData import *
@@ -22,15 +23,24 @@ define("port", default=8000, help="run on the given port", type=int)
 class Application(tornado.web.Application):
 	def __init__(self):
 		handlers = [(r'/fetchData/(\d+)', FetchDataHandler),
-					(r'/saveData', SaveDataHandler)
+					(r'/saveData', SaveDataHandler),
+					(r'/md?(.*)', ManageDataHandler)
 		]
-		conn = pymongo.Connection("localhost", 27017)
+		conn = MongoClient("localhost", 27017)
 		self.db = conn["finance"]
+
+		#TODO error
+		logging.config.fileConfig("/Users/hebo/Desktop/XavierXia/pro_code/python/ProTrade/conf/logging.conf")
+		self.logger = logging.getLogger("example01")
+
 		tornado.web.Application.__init__(self, handlers, debug=True)
+		self.logger.debug("This is debug message")
+		self.logger.info("This is info message")
+		self.logger.warning("This is warning message")
 
 if __name__ == "__main__":
+	#upper log level
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(Application())
     http_server.listen(options.port)
-    print('http://localhost:8000, main.py')
     tornado.ioloop.IOLoop.instance().start()
