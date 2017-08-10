@@ -130,6 +130,8 @@ pip install pymongo==2.7.2
 #问题2: 终端下命令失效
 在.bash_profile中添加 export PATH=/bin:/usr/bin:/sbin:/usr/sbin 
 source .bash_profile
+#问题3: mongodb数据的可视化
+下载Robo 3T
 
 ##########################################################
 #######################5.Anaconda############################

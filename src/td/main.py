@@ -22,9 +22,7 @@ define("port", default=8000, help="run on the given port", type=int)
 
 class Application(tornado.web.Application):
 	def __init__(self):
-		handlers = [(r'/fetchData/(\d+)', FetchDataHandler),
-					(r'/saveData', SaveDataHandler),
-					(r'/md?(.*)', ManageDataHandler)
+		handlers = [(r'/md', ManageDataHandler)
 		]
 		conn = MongoClient("localhost", 27017)
 		self.db = conn["finance"]

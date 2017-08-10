@@ -15,78 +15,80 @@ import tushare as ts
 import json
 
 '''
-usage:
---GET
-curl http://localhost:80/fetchData/600000
-curl http://localhost:80/fetchData/all
-'''
-class FetchDataHandler(tornado.web.RequestHandler):
-	def get(self, word):
-		print "FetchDataHandler: word ", word
-		stockColl = self.application.db.stock
-		for stock in stockColl.find():
-			if stock:
-				del stock['_id']
-				self.write(stock)
-			else:
-				self.set_status(404)
-				self.write({"error": "word not found"})
-
-
-'''
-usage:
---POST
-http://localhost:80/saveData -d word=600000
-http://localhost:80/saveData -d word=all
-'''
-class SaveDataHandler(tornado.web.RequestHandler):
-	def post(self):
-		stockColl = self.application.db.stock
-		word = self.get_argument('word','default')
-		if word == 'default':
-			self.write('Please again input!')
-
-		dD = ts.get_k_data(str(word))
-		dD = json.loads(dD.to_json(orient='records'))
-		#f30D = ts.get_k_data(str(word),ktype='30')
-		#f30D = json.loads(f30D.to_json(orient='records'))
-
-		#astock = {str(word):{'d':dD,'30F':f30D}}
-		astock = {str(word):{'d':dD}}
-		#self.write(astock)
-
-		stockColl.save(astock)
-		del astock['_id']
-		self.write(astock)
-
-'''
-http://localhost/md?ac=save&tp=stock&cd=600000
-
+SAVE
+http://localhost/md?p=s&p=stock&p=600000&p=D&p=qfq&p=kNil&p=kNil&p=False
+Introductions:
+	1: action(like:save,get,add,delete,...)
+   	2: type, 
+   	3: code, 
+   	4: stock cycle data(like:M,W,D,60,30,15,5)
+   	5: qfq-前复权 hfq-后复权 None-不复权，默认为qfq
+   	6: 开始日期 format：YYYY-MM-DD 为空时取当前日期
+   	7. 结束日期 format：YYYY-MM-DD
+   	8. 是否为指数：默认为False,设定为True时认为code为指数代码
+GET
+http://localhost/md?p=g&p=stock&p=600000&p=D&p=qfq&p=kNil&p=kNil&p=False
 '''
 class ManageDataHandler(tornado.web.RequestHandler):
-	def get(self,word):
-		args = self.request.arguments
-		arg1 = self.get_arguments("tp")
-		data = self.request.query_arguments
-		#TODO error
-		logger = self.application.logger
-		#arg2 = self.get_query_arguments()
-		#code = args[2]
-		logger.info("arg1....%s",args)
-		logger.info("arg2....%s",arg1)
-		logger.info("data....%s",data)
-		self.write({"hao":"111"})
-		'''
-		dD = ts.get_k_data(str(code))
-		dD = json.loads(dD.to_json(orient='records'))
+	'''
+	def __init__(self):
+		self.argsData= {}
+		self.arr = ["action","type","code","ktype","autype","start","end","index"]
+		self.logger = self.application.logger
+		self.logger.info("ManageDataHandler init....")
+	'''
+	def get(self):
+
+		self.argsData= {}
+		self.arr = ["action","type","code","ktype","autype","start","end","index"]
+		self.logger = self.application.logger
+		self.logger.info("ManageDataHandler init....")
+
+		args = self.get_arguments("p")
+		self.logger.info("request args....%s",args)
+		self.parseArg(args)
+		self.logger.info("self.argsData: %s",self.argsData)
 
 		stockColl = self.application.db.stock
-		sDoc = stockColl.findOne({"dCode":code})
-		if sDoc:
-			stockColl.update({"dCode":code},{"$push":code})
-		else:
-			stockColl.insert({"dCode":code})
-			stockColl.update({"dCode":code},{"$push":{"dData":dD}})
-		del stockColl["_id"]
+		#self.write({"hao":"111"})
+		if self.argsData['action'] == 's':
+			self.dealSave(stockColl)
+		elif self.argsData['action'] == 'g':
+			self.dealGet(stockColl)
+
+
+	def dealSave(self, stockColl):
+		code = self.argsData['code']
+		#获取和保存全部历史数据
+		if self.argsData['start'] == 'kNil' and self.argsData['end'] == 'kNil':
+
+			sData = ts.get_k_data(code,ktype=self.argsData['ktype'])
+			sData = json.loads(sData.to_json(orient='records'))
+			self.logger.info("fetch all history data...")
+
+			stockColl.insert({"dCode":code,"dktype":self.argsData['ktype']})
+			stockColl.update({"dCode":code,"dktype":self.argsData['ktype']},{"$push":{"dData":{"$each":sData}}})
+		#只获取当天的数据
+		elif self.argsData['start'] != 'kNil' or self.argsData['end'] != 'kNil':
+			sData = ts.get_k_data(code,ktype=self.argsData['ktype'])
+			sData = json.loads(sData.to_json(orient='records'))
+
+			self.logger.info("fetch realtime data...")
+			stockColl.update({"dCode":code,"dktype":self.argsData['ktype']},{"$push":{"dData":{"$each":sData}}})
+		
+		for doc in stockColl.find():
+			del doc['_id']
 		self.write(stockColl)
-		'''
+
+	def dealGet(self, stockColl):
+		code = self.argsData['code']
+		doc = stockColl.find({"dCode":code,"dktype":self.argsData['ktype']},{"dData":1,"_id":0})
+		self.logger.info("doc: %s",doc)
+		#self.write(doc['dData'])
+		
+	def parseArg(self, args):
+		if len(args) == 8:
+			for i, v in enumerate(args):
+				self.argsData[self.arr[i]] = v
+		else:
+			self.logger.warn("input args error!")
