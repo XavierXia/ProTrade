@@ -16,7 +16,7 @@ import json
 
 '''
 SAVE
-http://localhost/md?p=s&p=stock&p=600000&p=D&p=qfq&p=kNil&p=kNil&p=False
+http://localhost/md?p=s&p=stock&p=600000&p=D&p=qfq&p=kNil&p=kNil&p=False&p=qlsj
 Introductions:
 	1: action(like:save,get,add,delete,...)
    	2: type, 
@@ -26,8 +26,9 @@ Introductions:
    	6: 开始日期 format：YYYY-MM-DD 为空时取当前日期
    	7. 结束日期 format：YYYY-MM-DD
    	8. 是否为指数：默认为False,设定为True时认为code为指数代码
+   	9. 是否请求的是全量数据还是增量数据,qlsj表示全量数据,zlsj表示增量数据
 GET
-http://localhost/md?p=g&p=stock&p=600000&p=D&p=qfq&p=kNil&p=kNil&p=False
+http://localhost/md?p=g&p=stock&p=600000&p=D&p=qfq&p=kNil&p=kNil&p=False&p=qlsj
 '''
 class ManageDataHandler(tornado.web.RequestHandler):
 	'''
@@ -40,7 +41,7 @@ class ManageDataHandler(tornado.web.RequestHandler):
 	def get(self):
 
 		self.argsData= {}
-		self.arr = ["action","type","code","ktype","autype","start","end","index"]
+		self.arr = ["action","type","code","ktype","autype","start","end","index","qDataType"]
 		self.logger = self.application.logger
 		self.logger.info("ManageDataHandler init....")
 
@@ -56,11 +57,11 @@ class ManageDataHandler(tornado.web.RequestHandler):
 		elif self.argsData['action'] == 'g':
 			self.dealGet(stockColl)
 
-
+	#save data to mongodb
 	def dealSave(self, stockColl):
 		code = self.argsData['code']
-		#获取和保存全部历史数据
-		if self.argsData['start'] == 'kNil' and self.argsData['end'] == 'kNil':
+		#获取全部历史数据
+		if self.argsData['qDataType'] == 'qlsj':
 
 			sData = ts.get_k_data(code,ktype=self.argsData['ktype'])
 			sData = json.loads(sData.to_json(orient='records'))
@@ -68,8 +69,8 @@ class ManageDataHandler(tornado.web.RequestHandler):
 
 			stockColl.insert({"dCode":code,"dktype":self.argsData['ktype']})
 			stockColl.update({"dCode":code,"dktype":self.argsData['ktype']},{"$push":{"dData":{"$each":sData}}})
-		#只获取当天的数据
-		elif self.argsData['start'] != 'kNil' or self.argsData['end'] != 'kNil':
+		#获取增量数据,TODO
+		else:
 			sData = ts.get_k_data(code,ktype=self.argsData['ktype'])
 			sData = json.loads(sData.to_json(orient='records'))
 
@@ -80,14 +81,24 @@ class ManageDataHandler(tornado.web.RequestHandler):
 			del doc['_id']
 		self.write(stockColl)
 
+	#get data from mongodb
 	def dealGet(self, stockColl):
 		code = self.argsData['code']
-		doc = stockColl.find({"dCode":code,"dktype":self.argsData['ktype']},{"dData":1,"_id":0})
-		self.logger.info("doc: %s",doc)
+		self.logger.info("code: %s",code)
+		#返回全部数据
+		if self.argsData['qDataType'] == 'qlsj':
+			doc = stockColl.find({"dCode":code,"dktype":self.argsData['ktype']},{"dData":1,"_id":0})
+			for record in doc:	
+				self.logger.info("record: %s",record["dData"])
+				#需要优化,这是一个例子
+				self.write(record["dData"][0])
+		#返回部分数据
+		else:
+			pass
 		#self.write(doc['dData'])
 		
 	def parseArg(self, args):
-		if len(args) == 8:
+		if len(args) == 9:
 			for i, v in enumerate(args):
 				self.argsData[self.arr[i]] = v
 		else:
