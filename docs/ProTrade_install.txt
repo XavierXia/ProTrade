@@ -127,11 +127,19 @@ Traceback (most recent call last):
 AttributeError: 'module' object has no attribute 'Connection'
 #解决方法
 pip install pymongo==2.7.2
+
 #问题2: 终端下命令失效
 在.bash_profile中添加 export PATH=/bin:/usr/bin:/sbin:/usr/sbin 
 source .bash_profile
 #问题3: mongodb数据的可视化
 下载Robo 3T
+
+#问题4:可以用ipython的方式模拟本系统操作数据,如下:
+In [3]: from pymongo import MongoClient
+In [4]: client = MongoClient('localhost', 27017)
+In [5]: db = client['finance']
+In [6]: collection = db.stock
+In [9]: doc = collection.find_one({"dCode":"600000","dktype":"d"},{"dData":1,"_id":0})
 
 ##########################################################
 #######################5.Anaconda############################

@@ -87,11 +87,9 @@ class ManageDataHandler(tornado.web.RequestHandler):
 		self.logger.info("code: %s",code)
 		#返回全部数据
 		if self.argsData['qDataType'] == 'qlsj':
-			doc = stockColl.find({"dCode":code,"dktype":self.argsData['ktype']},{"dData":1,"_id":0})
-			for record in doc:	
-				self.logger.info("record: %s",record["dData"])
-				#需要优化,这是一个例子
-				self.write(record["dData"][0])
+			doc = stockColl.find_one({"dCode":code,"dktype":self.argsData['ktype']},{"dData":1,"_id":0})
+			self.write(json.dumps(doc['dData']))
+
 		#返回部分数据
 		else:
 			pass
