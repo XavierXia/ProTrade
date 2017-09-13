@@ -15,6 +15,7 @@ from tornado.options import define, options
 
 import logging
 import sys
+sys.path.insert(0, '/Users/hebo/Desktop/XavierXia/pro_code/python/ProTrade/conf/')
 sys.path.append('../')
 from data.manageData import *
 
