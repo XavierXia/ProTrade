@@ -13,6 +13,8 @@ from pandas import Series, DataFrame
 from datetime import datetime
 import matplotlib.pyplot as plt
 
+import pdb
+sys.path.insert(0, '/Users/hebo/Desktop/XavierXia/pro_code/python/ProTrade/conf/')
 import read_conf
 
 '''
@@ -64,6 +66,9 @@ class cl():
 
 	def buildModel(self):
 		#日线
+		#debug
+		#pdb.set_trace()
+
 		if self.ktype == 'D':
 			dData = self.DFdata['2015-07-01':]
 			print("dData[:5]: ",dData[:5])
@@ -77,7 +82,122 @@ class cl():
 			print("dData[:6]: ",dData[:6])
 			
 			#处理包含关系
+			plotdat = pd.DataFrame({ "high": [], "low": [],"parting": [],"dire": [], "kcnt": [], "turn":[]})
+			#row的检索
+			i = 0
+			#K线合并处理后的索引
+			newi = 0
+			#合并K线包含关系之后K线的索引,从1开始计数
+			#也就是向上或向下的非包含关系的K线个数,会被重置为0
+			ki = 0 
 
+			for idx, row in dData.iterrows():
+				if i == 0:
+					print "idx, ", idx
+					print "row, ", row
+					ki += 1
+					plotdat = plotdat.append(pd.DataFrame({"high": row.high,
+														   "low":row.low,
+														   "dire":"up",
+														   "kcnt" : ki,
+														   "parting": "B",
+														   "turn": 1},
+														   index=[idx]))
+					newi += 1
+					i += 1
+					print "plotdat: ", plotdat
+					continue
+				#if i == 5:
+				#	pdb.set_trace()
+
+				if plotdat.iloc[newi-1].dire == "up": #向上合并
+					if float(row.low) > float(plotdat.iloc[newi-1].low):
+						if float(row.high) > float(plotdat.iloc[newi-1].high):
+							ki += 1
+							plotdat = plotdat.append(pd.DataFrame({"high": row.high,
+									   "low":row.low,
+									   "dire":"up",
+									   "kcnt" : str(ki),
+									   "parting": "N",
+									   "turn": 0},
+									   index=[idx]))
+							newi += 1
+						else:
+							#if int(plotdat.iloc[newi-1].kcnt) == 1:
+								#continue
+							if int(plotdat.iloc[newi-1].kcnt) > 1: #进行包含处理
+								row_index = plotdat.index[newi-1]
+								plotdat.loc[row_index,'low'] = row.low
+					elif float(row.low) < float(plotdat.iloc[newi-1].low):
+						if float(row.high) < float(plotdat.iloc[newi-1].high):
+							ki = 2
+							#plotdat.iloc[newi-1].parting = "T"
+							row_index = plotdat.index[newi-1]
+							plotdat.loc[row_index,'parting'] = "T"
+							plotdat.loc[row_index, 'turn'] = 1
+
+							plotdat = plotdat.append(pd.DataFrame({"high": row.high,
+										"low":row.low,
+										"dire":"down",
+										"kcnt" : str(ki),
+										"parting": "N",
+										"turn": 0},
+										index=[idx]))
+							newi += 1
+						else:
+							row_index = plotdat.index[newi-1]
+							plotdat.loc[row_index,'high'] = row.high
+					else: #两个k线最低价相等
+						if float(row.high) > float(plotdat.iloc[newi-1].high):
+							row_index = plotdat.index[newi-1]
+							plotdat.loc[row_index,'high'] = row.high
+				else: #down 向下 TODO
+					if float(row.high) < float(plotdat.iloc[newi-1].high):
+						if float(row.low) < float(plotdat.iloc[newi-1].low):
+							ki += 1
+							plotdat = plotdat.append(pd.DataFrame({"high": row.high,
+									   "low":row.low,
+									   "dire":"down",
+									   "kcnt" : str(ki),
+									   "parting": "N",
+									   "turn": 0},
+									   index=[idx]))
+							newi += 1
+						else:
+							#if int(plotdat.iloc[newi-1].kcnt) == 1:
+								#continue
+							if int(plotdat.iloc[newi-1].kcnt) > 1: #进行包含处理
+								row_index = plotdat.index[newi-1]
+								plotdat.loc[row_index,'high'] = row.high
+
+					elif float(row.high) > float(plotdat.iloc[newi-1].high):
+						if float(row.low) > float(plotdat.iloc[newi-1].low):
+							ki = 2
+
+							row_index = plotdat.index[newi-1]
+							plotdat.loc[row_index,'parting'] = "B"
+							plotdat.loc[row_index, 'turn'] = 1
+
+							plotdat = plotdat.append(pd.DataFrame({"high": row.high,
+										"low":row.low,
+										"dire":"up",
+										"kcnt" : str(ki),
+										"parting": "N",
+										"turn": 0},
+										index=[idx]))
+							newi += 1
+						else:							
+							row_index = plotdat.index[newi-1]
+							plotdat.loc[row_index,'low'] = row.low
+					else: #两个k线最高价相等
+						if float(row.low) < float(plotdat.iloc[newi-1].low):
+							row_index = plotdat.index[newi-1]
+							plotdat.loc[row_index,'low'] = row.low
+				#记录循环次数
+				i += 1	
+			#print "plotdat[:30], ", plotdat[:30]
+			print "plotdat[:], ", plotdat
+				
 
 
 if __name__ == "__main__":

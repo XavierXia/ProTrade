@@ -16,10 +16,15 @@ __auther__ = @"XavierXia"
 1. 没有特征序列的定义,那么线段里都要继续存在类似小级别转大级别的情况.
 
 名词部分:
-分型 parting: 顶分型 Top_type 底分型 Bottom_type
+分型 parting: 顶分型 Top_type(简称T) 底分型 Bottom_type(简称B) N值表示此刻走势不为分型形态
+方向: direction: 向上 up, 向下 down
+走势形态: shape: 中继 relay 0  转折 turn 1
 笔 stroke
 线段 segment
 中枢 maincenter
 走势类型 trend_type
 级别 level
+
+例子数据:
+1. data = pd.DataFrame(randn(7,4),index=pd.date_range('1/1/2017',periods=7),columns=list('ABCD'))
 '''
