@@ -14,7 +14,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 
 import pdb
-sys.path.insert(0, '/Users/hebo/Desktop/XavierXia/pro_code/python/ProTrade/conf/')
+sys.path.insert(0, '/Users/xavierxia/Desktop/XavierXia/pro_code/python/ProTrade/conf/')
 import read_conf
 
 '''
@@ -64,11 +64,7 @@ class cl():
 			plt.plot(self.DFdata.index, self.DFdata["close"])
 			plt.show()
 
-	def buildModel(self):
-		#日线
-		#debug
-		#pdb.set_trace()
-
+	def getParting(self):
 		if self.ktype == 'D':
 			dData = self.DFdata['2015-07-01':]
 			print("dData[:5]: ",dData[:5])
@@ -197,10 +193,51 @@ class cl():
 				i += 1	
 			#print "plotdat[:30], ", plotdat[:30]
 			print "plotdat[:], ", plotdat
-				
+			self.plotdat = plotdat
+			
+			isRorW = read_conf.getConfig("trade_cl", "isWriteToFileOrDB")
+			if(int(isRorW) == 0):
+				plotdat.to_csv("getParting.csv")
+
+
+'''
+	def getStroke(self):
+
+		#划分笔
+		plotStrokedat = pd.DataFrame({ "sPrice": [], "ePrice": [],"dire": [],"sDate": [], "eDate": []})
+		#row的检索
+		i = 0
+
+		for idx, row in self.plotdat.iterrows():
+			if i == 0:
+				plotStrokedat = plotStrokedat.append(df.DataFrame({
+									"sPrice": row.low,
+									"ePrice": 0,
+									"dire"	: "up",
+									"sDate"	: idx,
+									"eDate" : "0",
+					}))
+
+			#转折点
+			if int(row.turn) == 1:
+				if int(row.kcnt) > 4:
+					pass
+				elif int(row.kcnt) == 4:
+					pass
+				isEnergy = read_conf.getConfig("trade_cl", "kline_energy")
+
+
+			i += 1
+'''
+	#def buildModel(self):
+		#日线
+		#debug
+		#pdb.set_trace()
+			
 
 
 if __name__ == "__main__":
 	cl = cl()
 	cl.getDataFromDB()
-	cl.buildModel()
+	cl.getParting()
+	'''cl.getStroke()'''

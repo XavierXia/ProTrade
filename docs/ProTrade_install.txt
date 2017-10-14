@@ -7,12 +7,24 @@
 
 ProTrade系统启动项:
 1. nginx
+sudo nginx -c /Users/xavierxia/Desktop/XavierXia/pro_code/python/ProTrade/conf/nginx.conf
 2. supervior
 3. MongoDB
+4. tushare
+
 
 ##########################################################
 #######################1.nginx############################
 ##########################################################
+#安装brew
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+若出现安装不上的情况，如：
+Error: Could not link: /usr/local/share/doc/homebrew
+就执行: sudo rm -rf /usr/local/share/doc/homebrew
+
+#brew 升级
+sudo brew update
+
 # Mac安装nignx
 brew search nginx
 brew install nginx
@@ -44,11 +56,11 @@ nginx -s reload|reopen|stop|quit
 #打开 nginx
 nginx
 #使用指定的配置文件启动nginx
-sudo nginx -c /Users/hebo/Desktop/XavierXia/pro_code/python/ProTrade/conf/nginx.conf
+sudo nginx -c /Users/xavierxia/Desktop/XavierXia/pro_code/python/ProTrade/conf/nginx.conf
 #测试配置是否有语法错误
 nginx -t 测试nginx.conf配置
 #例如
-sudo nginx -s quit -c /Users/hebo/Desktop/XavierXia/pro_code/python/ProTrade/conf/nginx.conf
+sudo nginx -s quit -c /Users/xavierxia/Desktop/XavierXia/pro_code/python/ProTrade/conf/nginx.conf
 
 ##########################################################
 #######################2.Tornado############################
@@ -65,19 +77,24 @@ ImportError: No module named tornado.httpserver
 ##########################################################
 #用supervisor来管理服务和进程
 #安装
-pip install supervior
+sudo pip install supervisor
 
 #在 Mac环境中对supervior进行如下设置
 #1. 转换成root权限
+sudo -i
 echo_supervisord_conf > /etc/supervisord.conf
 #2. 修复/etc/supervisord.conf
 [include]
 files = /etc/supervisord.d/*.ini
 #3. 创建目录
 mkdir -p /etc/supervisord.d
-#4. 将进程管理的脚本放到supervisord.d
+#4. 将进程管理的脚本(ProTrade里面的tornado.ini文件)放到supervisord.d
 #5. supervisord 启动
-sudo /Users/hebo/anaconda2/bin/supervisord -c /etc/supervisord.conf 
+sudo /Users/xavierxia/anaconda2/bin/supervisord -c /etc/supervisord.conf
+或
+sudo /Users/xavierxia/anaconda2/envs/anaconda3/envs/test_py2/bin/supervisord -c /etc/supervisord.conf 
+将在.bash_profile supervisord的命令路径即可: sudo supervisord -c /etc/supervisord.conf 
+
 #6. 查看进程及相关操作
 sudo supervisorctl
 #进程关闭
@@ -98,13 +115,23 @@ supervisor> status
 # 查看该程序的日志
 supervisor> tail -f tornadoes:tornado-8000
 
+#问题1
+Error: Another program is already listening on a port that one of our HTTP servers is configured to use.  Shut this program down first before starting supervisord.
+解决办法：
+sudo unlink /tmp/supervisor.sock
+sudo unlink /var/run/supervisor.sock
+
 ##########################################################
 #######################4.MongoDB############################
 ##########################################################
-#mongoDB
-#下载PyMongodb
-curl -O https://fastdl.mongodb.org/osx/mongodb-osx-x86_64-3.4.6.
-tgz
+
+#安装PyMongodb
+pip install pymongo
+#升级
+pip install --upgrade pymongo
+
+#下载mongoDB
+curl -O https://fastdl.mongodb.org/osx/mongodb-osx-x86_64-3.4.6.tgz
 #解压
 tar -zxvf mongodb-osx-x86_64-3.4.6.tgz
 #
@@ -112,10 +139,11 @@ mkdir -p mongodb
 cp -R -n mongodb-osx-x86_64-3.4.6/ mongodb
 #增加环境变量
 open .bash_profile
-export PATH=<mongodb-install-directory>/bin:$PATH
+#MONGODB_HOME=/Users/xavierxia/mongodb
+#export PATH=“$MONGODB_HOME/bin:$PATH”
 #数据存放路径
 mkdir -p /data/db #默认
-mongodb/bin/mongod --dbpath /Users/hebo/data/db/
+mongodb/bin/mongod --dbpath /Users/xavierxia/data/db/
 #进入 mongoDB shell终端,需要开启 mongodb之后再执行该语句
 mongodb/bin/mongo
 
@@ -145,10 +173,10 @@ In [9]: doc = collection.find_one({"dCode":"600000","dktype":"d"},{"dData":1,"_i
 #######################5.Anaconda############################
 ##########################################################
 #到官网下载anaconda2和3
-#1.先安装 anaconda2到目录,如/Users/hebo/anaconda2/
-#2.之后安装anaconda3到目录,如/Users/hebo/anaconda2/envs下面
+#1.先安装 anaconda2到目录,如/Users/xavierxia/anaconda2/
+#2.之后安装anaconda3到目录,如/Users/xavierxia/anaconda2/envs下面(envs为新建文件夹)
 
-#在/Users/hebo/anaconda2/envs/生成test_py3和test_py2
+#在/Users/xavierxia/anaconda2/envs/生成test_py3和test_py2
 #3.基于 python3.6 创建一个名为test_py3 的环境
 conda create --name test_py3 python=3.6 
 #4.基于 python2.7 创建一个名为test_py2 的环境

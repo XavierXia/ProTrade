@@ -15,7 +15,7 @@ from tornado.options import define, options
 
 import logging
 import sys
-sys.path.insert(0, '/Users/hebo/Desktop/XavierXia/pro_code/python/ProTrade/conf/')
+sys.path.insert(0, '/Users/xavierxia/Desktop/XavierXia/pro_code/python/ProTrade/conf/')
 sys.path.append('../')
 from data.manageData import *
 
@@ -29,7 +29,7 @@ class Application(tornado.web.Application):
 		self.db = conn["finance"]
 
 		#TODO error
-		logging.config.fileConfig("/Users/hebo/Desktop/XavierXia/pro_code/python/ProTrade/conf/logging.conf")
+		logging.config.fileConfig("/Users/xavierxia/Desktop/XavierXia/pro_code/python/ProTrade/conf/logging.conf")
 		self.logger = logging.getLogger("example01")
 
 		tornado.web.Application.__init__(self, handlers, debug=True)
