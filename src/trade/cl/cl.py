@@ -200,39 +200,187 @@ class cl():
 				plotdat.to_csv("getParting.csv")
 
 
-'''
 	def getStroke(self):
 
 		#划分笔
-		plotStrokedat = pd.DataFrame({ "sPrice": [], "ePrice": [],"dire": [],"sDate": [], "eDate": []})
+		plotStrokedat = pd.DataFrame({ "high": [], "low": [],"parting": [],"dire": [], "kcnt": [], "turn":[]})
 		#row的检索
 		i = 0
+		newi = 0 
+		isNewStroke = read_conf.getConfig("trade_cl", "isNewStroke")
+		kline_energy = read_conf.getConfig("trade_cl", "kline_energy")
+		#笔中单方向上的k线个数
+		strokeKcnt = 0
 
 		for idx, row in self.plotdat.iterrows():
 			if i == 0:
 				plotStrokedat = plotStrokedat.append(df.DataFrame({
-									"sPrice": row.low,
-									"ePrice": 0,
-									"dire"	: "up",
-									"sDate"	: idx,
-									"eDate" : "0",
-					}))
+									"high": row.high,
+									"low": row.low,
+									"parting"	: row.parting,
+									"dire"	: "down",
+									"kcnt" : row.kcnt,
+									"turn" : row.turn},
+									index=[idx]))
+				i += 1
+				newi += 1
+				strokeKcnt = 1
+				continue
 
-			#转折点
-			if int(row.turn) == 1:
-				if int(row.kcnt) > 4:
-					pass
-				elif int(row.kcnt) == 4:
-					pass
-				isEnergy = read_conf.getConfig("trade_cl", "kline_energy")
+			if(row.dire == 'up'): #向上笔
+				#为该向上笔的标准K线数
+				newKcnt = int(row.kcnt)
 
+				#说明该向上笔还没有有效建立起来
+				if plotStrokedat.iloc[newi-1].dire == "down":
+					strokeKcnt += 1
+				#转折点
+				if int(row.turn) == 1:
+					#说明向下笔无效，需继续算成向上笔
+					#if plotStrokedat.iloc[newi-1].dire == "up":
+					#	if row.high > plotStrokedat.iloc[newi-1].high:
+
+
+					if(isNewStroke == 1): #新笔
+						if newKcnt == 4:
+							nLow = plotStrokedat.iloc[newi-1].low
+							increase = (row.high - nLow)/nLow
+
+							if(increase >= kline_energy):
+								#之前是否有相反的走势类型
+								#if plotStrokedat.iloc[newi-1].dire == 'down':
+								#	continue
+
+								plotStrokedat = plotStrokedat.append(df.DataFrame({
+									"high": row.high,
+									"low": row.low,
+									"parting"	: row.parting,
+									"dire"	: row.dire,
+									"kcnt" : row.kcnt,
+									"turn" : row.turn},
+									index=[idx]))
+								newi += 1
+						elif newKcnt > 4:
+							#说明之前已经填充进去一行数值
+							if int(plotStrokedat.iloc[newi-1].kcnt) >= 4:
+								#删除行
+								plotStrokedat.drop(newi-1,axis=0,inplace=True)
+								#新增一行
+								plotStrokedat = plotStrokedat.append(df.DataFrame({
+									"high": row.high,
+									"low": row.low,
+									"parting"	: row.parting,
+									"dire"	: row.dire,
+									"kcnt" : row.kcnt,
+									"turn" : row.turn},
+									index=[idx]))
+							else:
+								plotStrokedat = plotStrokedat.append(df.DataFrame({
+									"high": row.high,
+									"low": row.low,
+									"parting"	: row.parting,
+									"dire"	: row.dire,
+									"kcnt" : row.kcnt,
+									"turn" : row.turn},
+									index=[idx]))
+								newi += 1
+					else: #旧笔
+						if newKcnt > 4:
+							#说明之前已经填充进去一行数值
+							if int(plotStrokedat.iloc[newi-1].kcnt) >= 4:
+								#删除行
+								plotStrokedat.drop(newi-1,axis=0,inplace=True)
+								#新增一行
+								plotStrokedat = plotStrokedat.append(df.DataFrame({
+									"high": row.high,
+									"low": row.low,
+									"parting"	: row.parting,
+									"dire"	: row.dire,
+									"kcnt" : row.kcnt,
+									"turn" : row.turn},
+									index=[idx]))
+							else:
+								plotStrokedat = plotStrokedat.append(df.DataFrame({
+									"high": row.high,
+									"low": row.low,
+									"parting"	: row.parting,
+									"dire"	: row.dire,
+									"kcnt" : row.kcnt,
+									"turn" : row.turn},
+									index=[idx]))
+								newi += 1
+
+			else: #向下笔 down
+				newKcnt = int(row.kcnt)
+				#转折点
+				if int(row.turn) == 1:
+					if(isNewStroke == 1): #新笔
+						if newKcnt == 4:
+							nHigh = plotStrokedat.iloc[newi-1].high
+							increase = (nHigh - row.low)/nHigh
+
+							if(increase >= kline_energy):
+								plotStrokedat = plotStrokedat.append(df.DataFrame({
+									"high": row.high,
+									"low": row.low,
+									"parting"	: row.parting,
+									"dire"	: row.dire,
+									"kcnt" : row.kcnt,
+									"turn" : row.turn},
+									index=[idx]))
+								newi += 1
+						elif newKcnt > 4:
+							#说明之前已经填充进去一行数值
+							if int(plotStrokedat.iloc[newi-1].kcnt) >= 4:
+								#删除行
+								plotStrokedat.drop(newi-1,axis=0,inplace=True)
+								#新增一行
+								plotStrokedat = plotStrokedat.append(df.DataFrame({
+									"high": row.high,
+									"low": row.low,
+									"parting"	: row.parting,
+									"dire"	: row.dire,
+									"kcnt" : row.kcnt,
+									"turn" : row.turn},
+									index=[idx]))
+							else:
+								plotStrokedat = plotStrokedat.append(df.DataFrame({
+									"high": row.high,
+									"low": row.low,
+									"parting"	: row.parting,
+									"dire"	: row.dire,
+									"kcnt" : row.kcnt,
+									"turn" : row.turn},
+									index=[idx]))
+								newi += 1
+					else: #旧笔
+						if newKcnt > 4:
+							#说明之前已经填充进去一行数值
+							if int(plotStrokedat.iloc[newi-1].kcnt) >= 4:
+								#删除行
+								plotStrokedat.drop(newi-1,axis=0,inplace=True)
+								#新增一行
+								plotStrokedat = plotStrokedat.append(df.DataFrame({
+									"high": row.high,
+									"low": row.low,
+									"parting"	: row.parting,
+									"dire"	: row.dire,
+									"kcnt" : row.kcnt,
+									"turn" : row.turn},
+									index=[idx]))
+							else:
+								plotStrokedat = plotStrokedat.append(df.DataFrame({
+									"high": row.high,
+									"low": row.low,
+									"parting"	: row.parting,
+									"dire"	: row.dire,
+									"kcnt" : row.kcnt,
+									"turn" : row.turn},
+									index=[idx]))
+								newi += 1
 
 			i += 1
-'''
-	#def buildModel(self):
-		#日线
-		#debug
-		#pdb.set_trace()
+
 			
 
 
@@ -240,4 +388,4 @@ if __name__ == "__main__":
 	cl = cl()
 	cl.getDataFromDB()
 	cl.getParting()
-	'''cl.getStroke()'''
+	cl.getStroke()
